@@ -15,7 +15,7 @@ typedef struct see_sel_execution_s
 
 #define SEE_SEL_MAKE_NUMBER(execution, num)           (SEE_INT_BOX(num))
 #define SEE_SEL_MAKE_INTEGER(execution, num)          (SEE_INT_BOX(num))
-#define SEE_SEL_MAKE_STIRNG_SYMBOL(execution, string) (see_string_symbol_new(execution, string))
+#define SEE_SEL_MAKE_STRING_SYMBOL(execution, string) (see_string_symbol_new(execution, string))
 #define SEE_SEL_IS_TRUE(object)                       (object == SEE_OBJECT_NULL)
 
 void see_sel_execution_sys_init(void);
