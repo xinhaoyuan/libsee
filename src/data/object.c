@@ -21,6 +21,8 @@ see_object_type(see_object_t object)
     {
         suf = (see_type_t)(see_uintptr_t)(TO_GC_HEADER(object)->type);
         if (suf == SEE_OBJECT_TYPE_EXTERNAL)
+            /* For external objects, the type interface is stored as
+             * the first member */
             return *(see_type_t *)object;
         return suf;
     }
@@ -39,7 +41,7 @@ see_object_internal_type(see_object_t object)
 void
 see_object_type_init(see_object_t object, see_type_t type)
 {
-    if ((see_uintptr_t)type < 8)
+    if ((see_uintptr_t)type < SEE_OBJECT_TYPE_INTERNAL_TOTAL)
         type = SEE_OBJECT_TYPE_ERROR;
 
     see_gc_header_t header = TO_GC_HEADER(object);
@@ -312,16 +314,16 @@ static see_type_s vector_type = {
 };
 
 static const char *external_type_name(see_type_t self, see_object_t object) {
-    see_type_t gc = (*(see_type_t *)object);
-    return gc->name(gc, object);
+    see_type_t type = (*(see_type_t *)object);
+    return type->name(type, object);
 }
 static void external_type_enumerate(see_type_t self, see_object_t object, void(*touch)(void *, see_object_t), void *priv) {
-    see_type_t gc = (*(see_type_t *)object);
-    return gc->enumerate(gc, object, touch, priv);
+    see_type_t type = (*(see_type_t *)object);
+    return type->enumerate(type, object, touch, priv);
 }
 static void external_type_free(see_type_t self, see_object_t object) {
-    see_type_t gc = (*(see_type_t *)object);
-    return gc->free(gc, object);
+    see_type_t type = (*(see_type_t *)object);
+    return type->free(type, object);
 }
 static see_type_s external_type = {
     .name      = external_type_name,

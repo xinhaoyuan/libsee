@@ -9,6 +9,7 @@ typedef struct see_type_s      *see_type_t;
 #define SEE_OBJECT_TYPE_NULL             ((see_type_t)0x00)
 #define SEE_OBJECT_TYPE_INTERNAL_INT     ((see_type_t)0x01)
 #define SEE_OBJECT_TYPE_INTERNAL_SYMBOL  ((see_type_t)0x02)
+#define SEE_OBJECT_TYPE_INTERNAL_TOTAL   0x8
 #define SEE_OBJECT_TYPE_ERROR            ((see_type_t)0x08)
 #define SEE_OBJECT_TYPE_DUMMY            ((see_type_t)0x09)
 #define SEE_OBJECT_TYPE_STRING_SYMBOL    ((see_type_t)0x0a)

@@ -21,7 +21,7 @@ int       xstring_equal_cstr(xstring_t string, const char *cstr, see_uintptr_t l
 int       xstring_equal(xstring_t a, xstring_t b);
 char     *xstring_cstr(xstring_t string);
 see_uintptr_t xstring_len(xstring_t string);
-xstring_t xstring_get(xstring_t string);
+void      xstring_get(xstring_t string);
 void      xstring_put(xstring_t string);
 
 #endif
