@@ -10,6 +10,10 @@
 #include <stdint.h>
 typedef uintptr_t see_uintptr_t;
 typedef intptr_t  see_intptr_t;
+typedef uint64_t  see_uint64_t;
+typedef int64_t   see_int64_t;
+typedef uint32_t  see_uint32_t;
+typedef int32_t   see_int32_t;
 #define SEE_PTR_BITS (sizeof(see_uintptr_t) * 8)
 /* And memory/string routines from stdlib.h/string.h */
 #include <stdlib.h>
