@@ -1,8 +1,8 @@
 #include <see/data/object.h>
 
-see_type_t see_types[SEE_OBJECT_TYPE_TOTAL];
+see_type_t see_types[SEE_TYPE_TOTAL];
 
-#define HAS_GC_HEADER(object) (object && ((see_uintptr_t)(object) & SEE_OBJECT_TYPE_MASK) == 0)
+#define HAS_GC_HEADER(object) (object && ((see_uintptr_t)(object) & SEE_TYPE_MASK) == 0)
 #define TO_GC_HEADER(object)  ((see_gc_header_t)(object) - 1)
 #define TO_OBJECT(gc)         ((see_object_t)((see_gc_header_t)(gc) + 1))
 
@@ -14,13 +14,13 @@ see_type_t see_types[SEE_OBJECT_TYPE_TOTAL];
 #define GC_QUEUE_LENGTH_INIT 256
 
 see_type_t
-see_object_type(see_object_t object)
+see_object_type_get(see_object_t object)
 {
-    see_type_t suf = (see_type_t)((see_uintptr_t)object & SEE_OBJECT_TYPE_MASK);
+    see_type_t suf = (see_type_t)((see_uintptr_t)object & SEE_TYPE_MASK);
     if (suf == NULL && object)
     {
         suf = (see_type_t)(see_uintptr_t)(TO_GC_HEADER(object)->type);
-        if (suf == SEE_OBJECT_TYPE_EXTERNAL)
+        if (suf == SEE_TYPE_EXTERNAL)
             /* For external objects, the type interface is stored as
              * the first member */
             return *(see_type_t *)object;
@@ -29,10 +29,10 @@ see_object_type(see_object_t object)
     else return ((see_uintptr_t)suf & 1) ? (see_type_t)1 : suf;
 }
 
-unsigned int
-see_object_internal_type(see_object_t object)
+see_simple_type_t
+see_object_simple_type_get(see_object_t object)
 {
-    unsigned int suf = ((see_uintptr_t)object & SEE_OBJECT_TYPE_MASK);
+    unsigned int suf = ((see_uintptr_t)object & SEE_TYPE_MASK);
     if (suf == 0 && object)
         return TO_GC_HEADER(object)->type;
     else return (suf & 1) ? 1 : suf;
@@ -41,17 +41,17 @@ see_object_internal_type(see_object_t object)
 void
 see_object_type_init(see_object_t object, see_type_t type)
 {
-    if ((see_uintptr_t)type < SEE_OBJECT_TYPE_INTERNAL_TOTAL)
-        type = SEE_OBJECT_TYPE_ERROR;
+    if ((see_uintptr_t)type < SEE_TYPE_INTERNAL_TOTAL)
+        type = SEE_TYPE_DUMMY;
 
     see_gc_header_t header = TO_GC_HEADER(object);
-    if ((see_uintptr_t)type < SEE_OBJECT_TYPE_TOTAL)
+    if ((see_uintptr_t)type < SEE_TYPE_TOTAL)
     {
         header->type = (unsigned char)(see_uintptr_t)type;
     }
     else
     {
-        header->type = (unsigned char)(see_uintptr_t)SEE_OBJECT_TYPE_EXTERNAL;
+        header->type = (unsigned char)(see_uintptr_t)SEE_TYPE_EXTERNAL;
         *(see_type_t *)object = type;
     }
 }
@@ -69,7 +69,7 @@ see_object_new_by_size(see_heap_t heap, see_uintptr_t size)
     see_gc_header_t gc = (see_gc_header_t)SEE_MALLOC(sizeof(see_gc_header_s) + size);
     if (gc == NULL) return NULL;
 
-    gc->type          = (unsigned char)(see_uintptr_t)SEE_OBJECT_TYPE_DUMMY;
+    gc->type          = (unsigned char)(see_uintptr_t)SEE_TYPE_DUMMY;
     gc->gc_mark       = heap ? GC_MARK_UNTOUCH : GC_MARK_HOST;
     gc->protect_level = 1;      /* objects are initially protected as returning values */
 
@@ -270,49 +270,6 @@ static see_type_s dummy_type = {
     .free      = dummy_type_free,
 };
 
-static const char *string_symbol_type_name(see_type_t self, see_object_t object) { return "STRING SYMBOL";} 
-static void string_symbol_type_free(see_type_t self, see_object_t object)
-{
-    see_string_symbol_t s = object;
-    if (s->string) SEE_FREE(s->string);
-}
-static see_type_s string_symbol_type = {
-    .name      = string_symbol_type_name,
-    .enumerate = dummy_type_enumerate,
-    .free      = string_symbol_type_free,
-};
-
-
-static const char *pair_type_name(see_type_t self, see_object_t object) { return "PAIR";} 
-static void pair_type_enumerate(see_type_t self, see_object_t object, void(*touch)(void *, see_object_t), void *priv)
-{ touch(priv, SEE_SLOT_GET(((see_pair_t)object)->car)); touch(priv, SEE_SLOT_GET(((see_pair_t)object)->cdr)); }
-static see_type_s pair_type = {
-    .name      = pair_type_name,
-    .enumerate = pair_type_enumerate,
-    .free      = dummy_type_free,
-};
-
-static const char *vector_type_name(see_type_t self, see_object_t object) { return "VECTOR";} 
-static void vector_type_enumerate(see_type_t self, see_object_t object, void(*touch)(void *, see_object_t), void *priv)
-{
-    see_uintptr_t i;
-    see_vector_t v = (see_vector_t)object;
-    for (i = 0; i < v->length; ++ i)
-    {
-        touch(priv, SEE_SLOT_GET(v->slot_entry[i]));
-    }
-}
-static void vector_type_free(see_type_t self, see_object_t object)
-{
-    see_vector_t v = (see_vector_t)object;
-    if (v->length) SEE_FREE(v->slot_entry);
-}
-static see_type_s vector_type = {
-    .name      = vector_type_name,
-    .enumerate = vector_type_enumerate,
-    .free      = vector_type_free,
-};
-
 static const char *external_type_name(see_type_t self, see_object_t object) {
     see_type_t type = (*(see_type_t *)object);
     return type->name(type, object);
@@ -335,11 +292,8 @@ void
 see_object_sys_init(void)
 {
     int i;
-    for (i = 0; i < SEE_OBJECT_TYPE_TOTAL; ++ i)
+    for (i = 0; i < SEE_TYPE_TOTAL; ++ i)
         see_types[i] = &dummy_type;
     
-    SEE_TYPE_ALIAS_REGISTER(SEE_OBJECT_TYPE_STRING_SYMBOL, &string_symbol_type);
-    SEE_TYPE_ALIAS_REGISTER(SEE_OBJECT_TYPE_PAIR,          &pair_type);
-    SEE_TYPE_ALIAS_REGISTER(SEE_OBJECT_TYPE_VECTOR,        &vector_type);
-    SEE_TYPE_ALIAS_REGISTER(SEE_OBJECT_TYPE_EXTERNAL,      &external_type);
+    SEE_TYPE_ALIAS_REGISTER(SEE_TYPE_EXTERNAL, &external_type);
 }

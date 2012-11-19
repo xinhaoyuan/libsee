@@ -12,29 +12,14 @@ typedef void *see_object_t;
 #error SEE_TYPE_ALIAS_REGISTER undefined
 #endif
 
-#ifndef SEE_SLOT_INIT
-void see_slot_init(see_slot_t slot, see_object_t object);
-#define SEE_SLOT_INIT(slot) do { see_slot_init(&(slot), object); } while (0)
+#ifndef SEE_OBJECT_TYPE_GET
+see_type_t see_object_type_get(see_object_t object);
+#define SEE_OBJECT_TYPE_GET(object) (see_object_type_get(object))
 #endif
 
-#ifndef SEE_SLOT_GET
-object_t see_slot_get(see_slot_t slot);
-#define SEE_SLOT_GET(slot) (see_slot_get(&(slot)))
-#endif
-
-#ifndef SEE_SLOT_SET
-void see_slot_set(see_slot_t slot, see_object_t object);
-#define SEE_SLOT_SET(slot) do { see_slot_set(&(slot), object); } while (0)
-#endif
-
-#ifndef SEE_OBJECT_TYPE
-see_type_t see_object_type(see_object_t object);
-#define SEE_OBJECT_TYPE(object) (see_object_type(object))
-#endif
-
-#ifndef SEE_OBJECT_INTERNAL_TYPE
-unsigned int see_object_internal_type(see_object_t object);
-#define SEE_OBJECT_INTERNAL_TYPE(object) (see_object_internal_type(object))
+#ifndef SEE_OBJECT_SIMPLE_TYPE_GET
+see_simple_type_t see_object_simple_type_get(see_object_t object);
+#define SEE_OBJECT_SIMPLE_TYPE_GET(object) (see_object_simple_type_get(object))
 #endif
 
 #ifndef SEE_OBJECT_TYPE_INIT
@@ -61,36 +46,6 @@ see_object_t see_internal_symbol_box(unsigned int id);
 unsigned int see_internal_symbol_unbox(see_object_t object);
 #define SEE_INTERNAL_SYMBOL_UNBOX(object) (see_internal_symbol_unbox(object))
 #endif
-
-typedef struct see_string_symbol_s *see_string_symbol_t;
-typedef struct see_pair_s          *see_pair_t;
-typedef struct see_vector_s        *see_vector_t;
-
-typedef struct see_string_symbol_s
-{
-    char *string;
-} see_string_symbol_s;
-
-typedef struct see_pair_s
-{
-    see_slot_s car, cdr;
-} see_pair_s;
-
-typedef struct see_vector_s
-{
-    see_uintptr_t length;
-    see_slot_s   *slot_entry;
-} see_vector_s;
-
-/* For access without type checking and bound checking */
-#define SEE_PAIR_CAR(object)                 SEE_SLOT_GET(((see_pair_t)(object))->car)
-#define SEE_PAIR_CDR(object)                 SEE_SLOT_GET(((see_pair_t)(object))->cdr)
-#define SEE_PAIR_CAR_SET(object, value)      SEE_SLOT_SET(((see_pair_t)(object))->car, value)
-#define SEE_PAIR_CDR_SET(object, value)      SEE_SLOT_SET(((see_pair_t)(object))->cdr, value)
-#define SEE_VECTOR_LEN(object)               (((see_vector_t)(object))->length)
-#define SEE_VECTOR_REF(object, index)        SEE_SLOT_GET(((see_vector_t)(object))->slot_entry[index])
-#define SEE_VECTOR_SET(object, index, value) SEE_SLOT_SET(((see_vector_t)(object))->slot_entry[index], value)
-#define SEE_STRING_SYMBOL_CSTR(object)       (((see_string_symbol_t)(object))->string)
 
 void see_object_sys_init(void);
 

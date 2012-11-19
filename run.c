@@ -38,39 +38,32 @@ int
 simple_stream_in(simple_stream_t stream, int advance)
 {
     int r;
-    if (advance)
+
+    if (stream->buf == BUF_EMPTY)
     {
-        if (stream->buf == BUF_EMPTY)
-            r = fgetc(stream->file);
-        else
-        {
-            r = stream->buf;
-            if (stream->buf != BUF_ERROR)
-                stream->buf = BUF_EMPTY;
-        }
+        r = fgetc(stream->file);
+        stream->buf = r;
+        if (stream->buf < 0) stream->buf = BUF_END;
     }
-    else
-    {
-        if (stream->buf == BUF_EMPTY)
-        {
-            stream->buf = fgetc(stream->file);
-            if (stream->buf < 0) stream->buf = BUF_END;
-        }
-        
-        r = stream->buf;
-    }
+
+    r = stream->buf;
+
+    if (advance && r >= 0)
+        stream->buf = BUF_EMPTY;
+
     return r;
 }
 
 int
-main(void)
+main(int argc, char **argv)
 {
     see_object_sys_init();
+    see_vm_types_sys_init();
 
     see_heap_t heap = see_heap_new();
 
     simple_stream_s ss;
-    simple_stream_open(&ss, fopen("input", "r"));
+    simple_stream_open(&ss, stdin);
 
     see_vm_prog_t prog = see_vm_prog_parse_bin(heap, (see_io_char_stream_in_f)simple_stream_in, &ss);
     if (prog == NULL)
@@ -83,7 +76,7 @@ main(void)
     see_vm_exception_s ex;
     see_vm_run(vm, &ex);
 
-    printf("ex no %d\n", ex.type);
+    printf("ex %d\n", ex.type);
     
 
     return 0;
