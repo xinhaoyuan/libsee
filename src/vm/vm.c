@@ -68,21 +68,22 @@ see_vm_run(see_vm_t vm, see_vm_exception_t exception)
         switch (type)
         {
         case SEE_VM_OPCODE_TYPE_NO_ARG:
+
             switch (arg)
             {
             case SEE_VM_OPCODE_NA_NOP: ++ pc; break;
-                
+            
             case SEE_VM_OPCODE_NA_EQ:
                 if (op_stack_size < op_stack_bound + 2)
                 {
                     exception->type = SEE_VM_EXCEPTION_TYPE_ARG_ERROR;
                     goto exit;
                 }
-
+            
                 int eq = 0;
                 see_vm_slot_t a = &op_stack_entry[op_stack_size - 2];
                 see_vm_slot_t b = &op_stack_entry[op_stack_size - 1];
-                
+            
                 if (a->type == b->type)
                 {
                     switch (a->type)
@@ -90,25 +91,25 @@ see_vm_run(see_vm_t vm, see_vm_exception_t exception)
                     case SEE_VM_SLOT_TYPE_OBJECT:
                         eq = a->_object == b->_object;
                         break;
-
+                    
                     case SEE_VM_SLOT_TYPE_WORD:
                         eq = a->_word == b->_word;
                         break;
-
+                    
                     default:
                         exception->type = SEE_VM_EXCEPTION_TYPE_UNSUPPORTED;
                         goto exit;
-                        
+                    
                     }
                 }
-
+            
                 a->type = SEE_VM_SLOT_TYPE_OBJECT;
                 a->_object = eq ? SEE_OBJECT_TRUE : SEE_OBJECT_NULL;
-                
+            
                 -- op_stack_size;
                 ++ pc;
                 break;
-
+            
             case SEE_VM_OPCODE_NA_IADD:
                 if (op_stack_size < op_stack_bound + 2)
                 {
@@ -236,6 +237,7 @@ see_vm_run(see_vm_t vm, see_vm_exception_t exception)
             break;
         
         case SEE_VM_OPCODE_TYPE_CONSTANT:
+        
             if (arg < prog->constant_count)
             {
                 see_vm_slot_t slot = VM_PUSH(op_stack_entry, op_stack_size, op_stack_allocated);
