@@ -122,19 +122,27 @@ vm_type_enumerate(see_type_t self, see_object_t object, void(*touch)(void *priv,
     touch(priv, vm->envir);
     touch(priv, vm->prog);
     touch(priv, vm->dump);
-    
-    for (i = 0; i < vm->stack.size; ++ i)
+
+    see_vm_slot_s *op_entry = vm->op_stack.entry;
+    for (i = 0; i < vm->op_stack.size; ++ i)
     {
-        if (vm->stack.entry[i].type == SEE_VM_SLOT_TYPE_OBJECT &&
-            vm->stack.entry[i]._object != NULL)
-            touch(priv, vm->stack.entry[i]._object);
+        if (op_entry[i].type == SEE_VM_SLOT_TYPE_OBJECT)
+            touch(priv, op_entry[i]._object);
+    }
+
+    see_vm_stack_frame_s *sf_entry = vm->sf_stack.entry;
+    for (i = 0; i < vm->sf_stack.size; ++ i)
+    {
+        if (sf_entry[i].envir) touch(priv, sf_entry[i].envir);
+        touch(priv, sf_entry[i].prog);
     }
 }
 static void
 vm_type_free(see_type_t self, see_object_t object)
 {
     see_vm_t vm = object;
-    SEE_FREE(vm->stack.entry);
+    SEE_FREE(vm->op_stack.entry);
+    SEE_FREE(vm->sf_stack.entry);
 }
 static see_type_s vm_type = {
     .name      = vm_type_name,
@@ -269,10 +277,15 @@ see_vm_new(see_heap_t heap, see_vm_prog_t prog)
 
     vm->heap = heap;
 
-    vm->stack.allocated = 0;
-    vm->stack.size      = 0;
-    vm->stack.bound     = 0;
-    vm->stack.entry     = NULL;
+    vm->sf_stack.allocated = 0;
+    vm->sf_stack.size      = 0;
+    vm->sf_stack.entry     = NULL;
+    
+    vm->op_stack.allocated = 0;
+    vm->op_stack.size      = 0;
+    vm->op_stack.entry     = NULL;
+
+    vm->op_stack_bound     = 0;
 
     vm->envir = NULL;
     vm->prog  = prog;

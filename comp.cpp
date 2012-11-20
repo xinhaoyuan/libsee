@@ -38,6 +38,11 @@ main(int argc, char **argv)
                 r = (SEE_VM_OPCODE_NA_NOP << SEE_VM_OPCODE_TYPE_SHIFT) |
                     SEE_VM_OPCODE_TYPE_NO_ARG;
             }
+            else if (word == "NA_EQ")
+            {
+                r = (SEE_VM_OPCODE_NA_EQ << SEE_VM_OPCODE_TYPE_SHIFT) |
+                    SEE_VM_OPCODE_TYPE_NO_ARG;
+            }
             else if (word == "NA_IADD")
             {
                 r = (SEE_VM_OPCODE_NA_IADD << SEE_VM_OPCODE_TYPE_SHIFT) |
@@ -69,6 +74,13 @@ main(int argc, char **argv)
                 ss >> idx;
                 r = (idx << SEE_VM_OPCODE_TYPE_SHIFT) |
                     SEE_VM_OPCODE_TYPE_CONSTANT;
+            }
+            else if (word == "DUP")
+            {
+                see_vm_uword_t idx;
+                ss >> idx;
+                r = (idx << SEE_VM_OPCODE_TYPE_SHIFT) |
+                    SEE_VM_OPCODE_TYPE_DUP;
             }
             else if (word == "VAR")
             {

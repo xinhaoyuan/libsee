@@ -18,15 +18,11 @@ typedef struct see_vm_slot_s
     {
         see_object_t   _object;
         see_vm_word_t  _word;
-        see_vm_uword_t _uword;
-        void          *_ptr;
     };
 } see_vm_slot_s;
 
 #define SEE_VM_SLOT_TYPE_OBJECT 0
 #define SEE_VM_SLOT_TYPE_WORD   1
-#define SEE_VM_SLOT_TYPE_UWORD  2
-#define SEE_VM_SLOT_TYPE_PTR    3
 
 typedef struct see_vm_string_symbol_s *see_vm_string_symbol_t;
 typedef struct see_vm_pair_s          *see_vm_pair_t;
@@ -36,6 +32,7 @@ typedef struct see_vm_prog_s          *see_vm_prog_t;
 typedef struct see_vm_envir_s         *see_vm_envir_t;
 typedef struct see_vm_s               *see_vm_t;
 typedef struct see_vm_stack_s         *see_vm_stack_t;
+typedef struct see_vm_stack_frame_s   *see_vm_stack_frame_t;
 
 typedef struct see_vm_string_symbol_s
 {
@@ -78,19 +75,30 @@ typedef struct see_vm_envir_s
 typedef struct see_vm_stack_s
 {
     see_uintptr_t  size;
-    see_uintptr_t  bound;
     see_uintptr_t  allocated;
-    see_vm_slot_s *entry;
+    void          *entry;
 } see_vm_stack_s;
 
-typedef struct see_vm_s
+typedef struct see_vm_stack_frame_s
 {
-    see_heap_t     heap;
-    see_vm_stack_s stack;
     see_vm_envir_t envir;
     see_vm_prog_t  prog;
     see_vm_uword_t pc;
-    see_object_t   dump;
+    see_uintptr_t  op_stack_bound;
+} see_vm_stack_frame_s;
+
+typedef struct see_vm_s
+{
+    see_heap_t           heap;
+    
+    see_vm_stack_s       sf_stack;
+    see_vm_stack_s       op_stack;
+    see_uintptr_t        op_stack_bound;
+    
+    see_vm_envir_t       envir;
+    see_vm_prog_t        prog;
+    see_vm_uword_t       pc;
+    see_object_t         dump;
 } see_vm_s;
 
 #define SEE_TYPE_VM_STRING_SYMBOL ((see_type_t)(SEE_TYPE_USER_DEFINE_START + 0))
